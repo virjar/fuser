@@ -94,7 +94,7 @@ fn fuse_mount_pure(
 }
 
 fn fuse_unmount_pure(mountpoint: &CStr) {
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "android"))]
     unsafe {
         let result = libc::umount2(mountpoint.as_ptr(), libc::MNT_DETACH);
         if result == 0 {
@@ -150,7 +150,7 @@ fn receive_fusermount_message(socket: &UnixStream) -> Result<File, Error> {
     let cmsg_buffer_len = unsafe { libc::CMSG_SPACE(mem::size_of::<c_int>() as libc::c_uint) };
     let mut cmsg_buffer = vec![0u8; cmsg_buffer_len as usize];
     let mut message: libc::msghdr;
-    #[cfg(all(target_os = "linux", not(target_env = "musl")))]
+    #[cfg(all(any(target_os = "linux", target_os = "android"), not(target_env = "musl")))]
     {
         message = libc::msghdr {
             msg_name: ptr::null_mut(),
@@ -162,7 +162,7 @@ fn receive_fusermount_message(socket: &UnixStream) -> Result<File, Error> {
             msg_flags: 0,
         };
     }
-    #[cfg(all(target_os = "linux", target_env = "musl"))]
+    #[cfg(all(any(target_os = "linux", target_os = "android"), target_env = "musl"))]
     {
         message = unsafe { std::mem::MaybeUninit::zeroed().assume_init() };
         message.msg_name = ptr::null_mut();
@@ -358,7 +358,7 @@ fn fuse_mount_sys(mountpoint: &OsStr, options: &[MountOption]) -> Result<Option<
     let mut flags = 0;
     if !options.contains(&MountOption::Dev) {
         // Default to nodev
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         {
             flags |= libc::MS_NODEV;
         }
@@ -369,7 +369,7 @@ fn fuse_mount_sys(mountpoint: &OsStr, options: &[MountOption]) -> Result<Option<
     }
     if !options.contains(&MountOption::Suid) {
         // Default to nosuid
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         {
             flags |= libc::MS_NOSUID;
         }
@@ -404,7 +404,7 @@ fn fuse_mount_sys(mountpoint: &OsStr, options: &[MountOption]) -> Result<Option<
     let c_mountpoint = CString::new(mountpoint.as_bytes()).unwrap();
 
     let result = unsafe {
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "android"))]
         {
             let c_options = CString::new(mount_options).unwrap();
             let c_type = CString::new("fuse").unwrap();
@@ -474,7 +474,7 @@ pub fn option_group(option: &MountOption) -> MountOptionGroup {
     }
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "android"))]
 pub fn option_to_flag(option: &MountOption) -> libc::c_ulong {
     match option {
         MountOption::Dev => 0, // There is no option for dev. It's the absence of NoDev

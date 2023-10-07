@@ -1,4 +1,15 @@
+use std::env;
+
 fn main() {
+    match env::var("CARGO_CFG_TARGET_OS") {
+        Ok(build_target_os) => {
+            if build_target_os == "android" {
+                // all android device support fuse
+                return;
+            }
+        }
+        _ => {}
+    }
     #[cfg(all(not(feature = "libfuse"), not(target_os = "linux")))]
     unimplemented!("Building without libfuse is only supported on Linux");
 
