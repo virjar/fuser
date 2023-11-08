@@ -366,7 +366,7 @@ impl<'a> Request<'a> {
                     self.request.nodeid().into(),
                     x.file_handle().into(),
                     x.offset(),
-                    ReplyDirectory::new(
+                    ReplyDirectory::new_custom(
                         self.request.unique().into(),
                         self.ch.clone(),
                         x.size() as usize,

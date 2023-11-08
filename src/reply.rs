@@ -44,6 +44,9 @@ impl fmt::Debug for Box<dyn ReplySender> {
 pub trait Reply {
     /// Create a new reply for the given request
     fn new<S: ReplySender>(unique: u64, sender: S) -> Self;
+
+    /// add by virjar, all replay has replay error method
+    fn error(self, err: c_int);
 }
 
 ///
@@ -65,6 +68,12 @@ impl Reply for ReplyRaw {
             sender: Some(sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        assert_ne!(err, 0);
+        self.send_ll(&ll::Response::new_error(ll::Errno::from_i32(err)));
+    }
 }
 
 impl ReplyRaw {
@@ -82,11 +91,6 @@ impl ReplyRaw {
         self.send_ll_mut(response)
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        assert_ne!(err, 0);
-        self.send_ll(&ll::Response::new_error(ll::Errno::from_i32(err)));
-    }
 }
 
 impl Drop for ReplyRaw {
@@ -115,17 +119,17 @@ impl Reply for ReplyEmpty {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyEmpty {
     /// Reply to a request with nothing
     pub fn ok(self) {
         self.reply.send_ll(&ll::Response::new_empty());
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -143,17 +147,17 @@ impl Reply for ReplyData {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyData {
     /// Reply to a request with the given data
     pub fn data(self, data: &[u8]) {
         self.reply.send_ll(&ll::Response::new_slice(data));
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -171,6 +175,11 @@ impl Reply for ReplyEntry {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyEntry {
@@ -185,10 +194,7 @@ impl ReplyEntry {
         ));
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
+
 }
 
 ///
@@ -205,6 +211,11 @@ impl Reply for ReplyAttr {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+     fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyAttr {
@@ -212,11 +223,6 @@ impl ReplyAttr {
     pub fn attr(self, ttl: &Duration, attr: &FileAttr) {
         self.reply
             .send_ll(&ll::Response::new_attr(ttl, &attr.into()));
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -236,6 +242,11 @@ impl Reply for ReplyXTimes {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -246,10 +257,7 @@ impl ReplyXTimes {
             .send_ll(&ll::Response::new_xtimes(bkuptime, crtime))
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
+
 }
 
 ///
@@ -266,6 +274,11 @@ impl Reply for ReplyOpen {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyOpen {
@@ -275,10 +288,7 @@ impl ReplyOpen {
             .send_ll(&ll::Response::new_open(ll::FileHandle(fh), flags))
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
+
 }
 
 ///
@@ -295,17 +305,17 @@ impl Reply for ReplyWrite {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyWrite {
     /// Reply to a request with the given open result
     pub fn written(self, size: u32) {
         self.reply.send_ll(&ll::Response::new_write(size))
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -322,6 +332,11 @@ impl Reply for ReplyStatfs {
         ReplyStatfs {
             reply: Reply::new(unique, sender),
         }
+    }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
     }
 }
 
@@ -343,11 +358,6 @@ impl ReplyStatfs {
             blocks, bfree, bavail, files, ffree, bsize, namelen, frsize,
         ))
     }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
 }
 
 ///
@@ -364,6 +374,11 @@ impl Reply for ReplyCreate {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyCreate {
@@ -378,10 +393,6 @@ impl ReplyCreate {
         ))
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
 }
 
 ///
@@ -398,6 +409,11 @@ impl Reply for ReplyLock {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyLock {
@@ -410,10 +426,6 @@ impl ReplyLock {
         }))
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
 }
 
 ///
@@ -430,17 +442,17 @@ impl Reply for ReplyBmap {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyBmap {
     /// Reply to a request with the given open result
     pub fn bmap(self, block: u64) {
         self.reply.send_ll(&ll::Response::new_bmap(block))
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -458,6 +470,11 @@ impl Reply for ReplyIoctl {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyIoctl {
@@ -465,11 +482,6 @@ impl ReplyIoctl {
     pub fn ioctl(self, result: i32, data: &[u8]) {
         self.reply
             .send_ll(&ll::Response::new_ioctl(result, &[IoSlice::new(data)]));
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -513,9 +525,22 @@ pub struct ReplyDirectory {
     data: DirEntList,
 }
 
+impl Reply for ReplyDirectory {
+
+    /// Create a new reply for the given request
+    fn new<S: ReplySender>(unique: u64, sender: S) -> Self{
+        panic!("just make compiler happy!!")
+    }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
+}
 impl ReplyDirectory {
+
     /// Creates a new ReplyDirectory with a specified buffer size.
-    pub fn new<S: ReplySender>(unique: u64, sender: S, size: usize) -> ReplyDirectory {
+   pub fn new_custom<S: ReplySender>(unique: u64, sender: S, size: usize) -> ReplyDirectory {
         ReplyDirectory {
             reply: Reply::new(unique, sender),
             data: DirEntList::new(size),
@@ -539,11 +564,6 @@ impl ReplyDirectory {
     /// Reply to a request with the filled directory buffer
     pub fn ok(self) {
         self.reply.send_ll(&self.data.into());
-    }
-
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
     }
 }
 
@@ -614,6 +634,11 @@ impl Reply for ReplyXattr {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code.
+     fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyXattr {
@@ -627,10 +652,6 @@ impl ReplyXattr {
         self.reply.send_ll(&ll::Response::new_data(data))
     }
 
-    /// Reply to a request with the given error code.
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
 }
 
 ///
@@ -647,6 +668,11 @@ impl Reply for ReplyLseek {
             reply: Reply::new(unique, sender),
         }
     }
+
+    /// Reply to a request with the given error code
+    fn error(self, err: c_int) {
+        self.reply.error(err);
+    }
 }
 
 impl ReplyLseek {
@@ -655,10 +681,7 @@ impl ReplyLseek {
         self.reply.send_ll(&ll::Response::new_lseek(offset))
     }
 
-    /// Reply to a request with the given error code
-    pub fn error(self, err: c_int) {
-        self.reply.error(err);
-    }
+
 }
 
 #[cfg(test)]
