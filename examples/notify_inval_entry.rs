@@ -21,10 +21,7 @@ use libc::{ENOBUFS, ENOENT, ENOTDIR};
 
 use clap::Parser;
 
-use fuser::{
-    FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyDirectory, ReplyEntry, Request,
-    FUSE_ROOT_ID,
-};
+use fuser::{FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyDirectory, ReplyEntry, Request, FUSE_ROOT_ID, Reply};
 
 struct ClockFS<'a> {
     file_name: Arc<Mutex<String>>,

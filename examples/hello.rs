@@ -1,8 +1,5 @@
 use clap::{crate_version, Arg, ArgAction, Command};
-use fuser::{
-    FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry,
-    Request,
-};
+use fuser::{FileAttr, FileType, Filesystem, MountOption, ReplyAttr, ReplyData, ReplyDirectory, ReplyEntry, Request, Reply};
 use libc::ENOENT;
 use std::ffi::OsStr;
 use std::time::{Duration, UNIX_EPOCH};
